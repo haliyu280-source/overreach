@@ -35,10 +35,14 @@ for statement in policy["Statement"]:
         findings += 1
         continue
 
-    # Rule 2: every action in one service, on every resource
+        # Rule 2: every action in one service, on every resource
     for action in actions:
         if action.endswith(":*") and "*" in resources:
-            print(f"⚠️  HIGH: Service-wide wildcard '{action}' on all resources. Full control of that service.")
+            # iam:* lets an attacker grant themselves any permission (privilege escalation)
+            if action == "iam:*":
+                print("🚨 CRITICAL: 'iam:*' on all resources. Can grant itself full admin (privilege escalation).")
+            else:
+                print(f"⚠️  HIGH: Service-wide wildcard '{action}' on all resources. Full control of that service.")
             findings += 1
 
 if findings == 0:
