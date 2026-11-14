@@ -1,25 +1,40 @@
 import json
 import sys
 
-from analyzer import analyze_policy, as_list
+from analyzer import analyze_policy
 
 ICONS = {"CRITICAL": "🚨", "HIGH": "⚠️ "}
 
-policy_file = sys.argv[1]
 
-with open(policy_file) as f:
-    policy = json.load(f)
+def scan_file(path):
+    """Scan one policy file, print its findings, and return how many there were."""
+    with open(path) as f:
+        policy = json.load(f)
 
-for statement in as_list(policy["Statement"]):
-    print("Effect:", statement["Effect"])
-    print("Action:", ", ".join(as_list(statement["Action"])))
-    print("Resource:", ", ".join(as_list(statement["Resource"])))
+    findings = analyze_policy(policy)
 
-findings = analyze_policy(policy)
+    print(f"\n📄 {path}")
+    for finding in findings:
+        icon = ICONS[finding["severity"]]
+        print(f"  {icon} {finding['severity']}: {finding['message']}")
+    if not findings:
+        print("  ✅ No findings.")
 
-for finding in findings:
-    icon = ICONS[finding["severity"]]
-    print(f"{icon} {finding['severity']}: {finding['message']}")
+    return len(findings)
 
-if not findings:
-    print("✅ No findings.")
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: python3 reader.py <policy.json> [more files...]")
+        sys.exit(2)
+
+    total = 0
+    for path in sys.argv[1:]:
+        total += scan_file(path)
+
+    print(f"\nTotal findings: {total}")
+    sys.exit(1 if total else 0)
+
+
+if __name__ == "__main__":
+    main()
