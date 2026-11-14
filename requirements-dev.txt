@@ -1,2 +1,1 @@
-echo "pytest" > requirements-dev.txt
-cat requirements-dev.txt
+pytest
